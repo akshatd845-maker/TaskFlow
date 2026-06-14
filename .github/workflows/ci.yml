@@ -1,0 +1,155 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  # ── Server Tests ────────────────────────────────────────────────────────────
+  server-test:
+    name: Server Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Run server linter
+        working-directory: server
+        run: npm run lint || true
+
+      - name: Run server tests
+        working-directory: server
+        run: npm test -- --coverage
+
+      - name: Upload server coverage
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          directory: server/coverage
+          flags: server
+
+  # ── Client Tests ────────────────────────────────────────────────────────────
+  client-test:
+    name: Client Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Run client linter
+        working-directory: client
+        run: npm run lint || true
+
+      # H9 FIX: vitest uses --coverage flag, not -- --coverage
+      - name: Run client tests
+        working-directory: client
+        run: npm run test:coverage
+
+      - name: Upload client coverage
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          directory: client/coverage
+          flags: client
+
+  # ── Build ───────────────────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Build runs independently — don't block on tests so PRs get build feedback fast
+    needs: [server-test, client-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Build client
+        working-directory: client
+        env:
+          VITE_API_URL: /api
+          VITE_SOCKET_URL: ''
+        run: npm run build
+
+      - name: Verify build output
+        run: ls -la client/dist
+
+  # ── Security Audit ──────────────────────────────────────────────────────────
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Audit server dependencies
+        working-directory: server
+        run: |
+          npm ci
+          npm audit --audit-level=high || true
+
+      - name: Audit client dependencies
+        working-directory: client
+        run: |
+          npm ci
+          npm audit --audit-level=high || true

@@ -1,0 +1,17 @@
+{
+  "name": "taskflow",
+  "version": "1.0.0",
+  "description": "A full-stack Project Management Tool similar to Trello and Asana",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
+
