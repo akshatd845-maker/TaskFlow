@@ -77,6 +77,8 @@ app.use(helmet({
 // Strict production CORS policy - no wildcard origins allowed
 const isProduction = process.env.NODE_ENV === 'production';
 const clientUrl = process.env.CLIENT_URL;
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('CLIENT_URL:', process.env.CLIENT_URL);
 
 let corsOptions;
 
@@ -251,6 +253,5 @@ const startListening = (port) => {
 };
 
 startListening(PORT);
-
 
 export default app;
