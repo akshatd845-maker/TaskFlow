@@ -1,10 +1,28 @@
-# TODO
+# UI Visibility & Contrast Audit - TODO
 
-- [x] Inspect backend card query validation and sorting implementation.
-- [x] Implement fix: normalize `sort` query values (duedate/due_date/dueDate etc.) and improve validation error message.
-- [ ] Update frontend (if needed) to send normalized `sort` values.
-- [ ] Verify with GET /api/cards?limit=100&sort=duedate returns 200 OK.
-- [x] Debug: “New Project” navbar button not working (nothing happens on click).
+## Phase 1 (single file)
+- [x] client/src/components/StatsCard.jsx
+  - [x] Replace light backgrounds/text-gray-* with dark-compatible design tokens
+  - [x] Preserve layout + component structure
+  - [x] Build verification
 
-- [ ] Run backend/client checks after debugging.
+## Phase 2 (single file)
+- [ ] client/src/pages/Dashboard.jsx
+  - [ ] Fix loading/error labels contrast
+  - [ ] Remove remaining bg-white/bg-gray-*/text-gray-* classes
+  - [ ] Fix chart container and tooltip readability
+  - [ ] Build verification
+
+## Phase 3 (single file, then subcomponents in same file)
+- [ ] client/src/pages/Projects.jsx
+  - [ ] Fix headings, labels, filters, dropdowns
+  - [ ] Fix empty/error states
+  - [ ] Fix ProjectModal and MembersModal readability
+  - [ ] Build verification
+
+## Phase 4 (single file)
+- [ ] client/src/pages/Team.jsx
+  - [ ] Fix role badge visibility
+  - [ ] Fix labels/table readability/card readability
+  - [ ] Build verification
 

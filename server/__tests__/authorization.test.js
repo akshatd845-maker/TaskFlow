@@ -1,24 +1,27 @@
-/**
- * Tests for authorization utility
- */
-
+import { jest } from '@jest/globals';
+import mongoose from 'mongoose';
 import { AuthResult, authorizeProjectAccess, authorizeBoardAccess } from '../utils/authorization.js';
-
-// Mock mongoose models
-jest.mock('../models/Project.js', () => ({
-  findById: jest.fn()
-}));
-
-jest.mock('../models/Board.js', () => ({
-  findById: jest.fn()
-}));
-
 import Project from '../models/Project.js';
 import Board from '../models/Board.js';
+
+// Overwrite model methods directly for testing
+const mockFindById = (id) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('Cast Error');
+    err.name = 'CastError';
+    return Promise.reject(err);
+  }
+  return Promise.resolve(null);
+};
+
+Project.findById = jest.fn().mockImplementation(mockFindById);
+Board.findById = jest.fn().mockImplementation(mockFindById);
 
 describe('authorization utility', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    Project.findById.mockImplementation(mockFindById);
+    Board.findById.mockImplementation(mockFindById);
   });
 
   describe('AuthResult', () => {

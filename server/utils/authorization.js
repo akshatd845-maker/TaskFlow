@@ -113,14 +113,16 @@ export const authorizeBoardAccess = async (boardId, userId) => {
     }
 
     // Board owner has full access
-    if (board.owner.toString() === userId.toString()) {
+    const ownerId = board.owner?._id ? board.owner._id.toString() : board.owner.toString();
+    if (ownerId === userId.toString()) {
       return AuthResult.allowed(EFFECTIVE_ROLES.OWNER, board);
     }
 
     // Check if user is a board member
-    const member = board.members?.find(
-      m => m.user.toString() === userId.toString()
-    );
+    const member = board.members?.find(m => {
+      const memberId = m.user?._id ? m.user._id.toString() : m.user.toString();
+      return memberId === userId.toString();
+    });
 
     if (!member) {
       return AuthResult.denied('Not a member of this board');

@@ -90,9 +90,9 @@ const connectDB = async () => {
 
 
     // If Atlas SRV/DNS resolution is blocked, a direct connection string can help.
-    const looksLikeDnsOrSrvProblem = /enotfound|eai_again|srv|dns|lookup|systemcall|timed?out/i.test(message);
+    const looksLikeDnsOrSrvProblem = /enotfound|eai_again|srv|dns|lookup|systemcall|timed?out|ECONNREFUSED/i.test(message);
 
-    if (isSrv && directUri && looksLikeDnsOrSrvProblem) {
+    if (directUri && (isSrv || looksLikeDnsOrSrvProblem)) {
       try {
         console.warn(
           `MongoDB SRV/DNS issue detected for MONGODB_URI; retrying with MONGODB_URI_DIRECT. Error: ${message}`
@@ -119,5 +119,14 @@ const connectDB = async () => {
 
 
 export default connectDB;
+
+export const disconnectDB = async () => {
+  try {
+    await mongoose.disconnect();
+    setDbDisconnected('disconnected');
+  } catch (error) {
+    console.error('Error disconnecting from MongoDB:', error?.message);
+  }
+};
 
 

@@ -2,48 +2,155 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  color-scheme: dark;
+}
+
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background-color: #f3f4f6;
-  color: #111827;
-  min-height: 100vh;
-  transition: background-color 150ms ease, color 150ms ease;
+@layer base {
+  body {
+    background: #13121b;
+    color: #e4e1ee;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
 }
 
-document.documentElement.dark body {
-  background-color: #0f172a; /* gray-900-ish */
-  color: #f3f4f6;
+/* Task card hover lift */
+.task-card:hover {
+  background: rgba(42, 41, 54, 0.7) !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35) !important;
+  transform: translateY(-1px) !important;
 }
 
-
-#root {
-  min-height: 100vh;
-}
-
-/* Custom scrollbar */
+/* Custom scrollbar matching the glass theme */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(228, 225, 238, 0.1);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(228, 225, 238, 0.2);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.1);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: rgba(15, 23, 42, 0.2);
+}
+
+/* Glassmorphism & Depth Utilities */
+.glass-sidebar {
+  background: rgba(19, 18, 27, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.light .glass-sidebar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.glass-navbar {
+  background: rgba(19, 18, 27, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.light .glass-navbar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.glass-card {
+  background: rgba(31, 31, 40, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+.light .glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+}
+
+.glass-card:hover {
+  background: rgba(31, 31, 40, 0.65);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
+}
+
+.light .glass-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.08);
+}
+
+.glass-modal {
+  background: rgba(31, 31, 40, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px 0 rgba(0, 0, 0, 0.45);
+}
+
+.light .glass-modal {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 24px 64px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Primary actions gradient */
+.btn-primary-gradient {
+  background: linear-gradient(135deg, #4f46e5 0%, #c3c0ff 100%);
+  color: #1d00a5;
+  transition: all 0.2s ease;
+}
+
+.btn-primary-gradient:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 15px rgba(195, 192, 255, 0.4);
 }
 
 /* Drag and drop styles */
@@ -52,7 +159,7 @@ document.documentElement.dark body {
 }
 
 .drag-over {
-  background-color: #e0e7ff;
+  background-color: rgba(195, 192, 255, 0.15);
 }
 
 /* Animation classes */

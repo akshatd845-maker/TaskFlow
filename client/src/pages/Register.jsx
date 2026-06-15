@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import taskflowLogo from '../Assets/TaskFlow Logo.png';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -53,12 +54,11 @@ const Register = () => {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-xl mb-4 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">TaskFlow</h1>
+          <img
+            src={taskflowLogo}
+            alt="TaskFlow"
+            className="h-16 w-auto mx-auto mb-4 rounded-full"
+          />
           <p className="text-gray-600 dark:text-gray-400 mt-2">Create your account</p>
         </div>
 

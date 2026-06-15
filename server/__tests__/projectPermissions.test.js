@@ -6,8 +6,7 @@ import {
   EFFECTIVE_ROLES,
   getEffectiveRoleForUser,
   hasPermission,
-  VALID_MEMBER_ROLES,
-  PERMISSIONS
+  VALID_MEMBER_ROLES
 } from '../utils/projectPermissions.js';
 
 describe('projectPermissions utility', () => {

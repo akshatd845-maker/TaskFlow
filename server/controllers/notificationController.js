@@ -1,88 +1,98 @@
-import Notification from '../models/Notification.js';
-import { getIO } from '../socket.js';
+import {
+  createUserNotification,
+  getNotificationsForUser,
+  getUnreadCount,
+  markNotificationRead,
+  markAllNotificationsRead,
+  deleteNotificationById
+} from '../services/notificationService.js';
+import logger from '../config/logger.js';
 
-// Create notification (self only — system events use controllers directly)
+// ─── Error Handler ────────────────────────────────────────────────────────────
+
+const handleServiceError = (res, error) => {
+  const status = error.statusCode || 500;
+  logger.error(error.message, { error: error.stack });
+  return res.status(status).json({ message: error.message });
+};
+
+// ─── Controllers ──────────────────────────────────────────────────────────────
+
+// @desc    Create notification (self only — system events use services directly)
+// @route   POST /api/notifications
+// @access  Private
 export const createNotification = async (req, res) => {
   try {
     const { type, message, referenceId, data } = req.body;
-    if (!message) return res.status(400).json({ message: 'message required' });
-
-    const n = await Notification.create({
-      user: req.user._id,
-      actor: req.user._id,
+    const n = await createUserNotification({
+      userId: req.user._id,
       type,
       message,
       referenceId,
       data
     });
-
-    // emit to user room
-    try {
-      const io = getIO();
-      if (io) io.to(`user:${req.user._id.toString()}`).emit('notification', n);
-    } catch (e) {
-      console.error('Notification emit failed', e.message);
-    }
-
     res.status(201).json(n);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    handleServiceError(res, error);
   }
 };
 
-// Get notifications for current user
+// @desc    Get notifications for current user
+// @route   GET /api/notifications
+// @access  Private
 export const getNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(100);
+    const notifications = await getNotificationsForUser(req.user._id);
     res.json(notifications);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    handleServiceError(res, error);
   }
 };
 
-export const getUnreadCount = async (req, res) => {
+// @desc    Get unread notification count
+// @route   GET /api/notifications/unread-count
+// @access  Private
+export const getUnreadCountController = async (req, res) => {
   try {
-    const count = await Notification.countDocuments({ user: req.user._id, isRead: false });
+    const count = await getUnreadCount(req.user._id);
     res.json({ count });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    handleServiceError(res, error);
   }
 };
 
+// @desc    Mark notification as read
+// @route   PUT /api/notifications/:id/read
+// @access  Private
 export const markAsRead = async (req, res) => {
   try {
-    const n = await Notification.findOne({ _id: req.params.id, user: req.user._id });
-    if (!n) return res.status(404).json({ message: 'Notification not found' });
-    n.isRead = true;
-    await n.save();
+    const n = await markNotificationRead(req.params.id, req.user._id);
     res.json(n);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    handleServiceError(res, error);
   }
 };
 
+// @desc    Mark all notifications as read
+// @route   PUT /api/notifications/read-all
+// @access  Private
 export const markAllRead = async (req, res) => {
   try {
-    await Notification.updateMany({ user: req.user._id, isRead: false }, { $set: { isRead: true } });
+    await markAllNotificationsRead(req.user._id);
     res.json({ message: 'All marked read' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    handleServiceError(res, error);
   }
 };
 
+// @desc    Delete notification
+// @route   DELETE /api/notifications/:id
+// @access  Private
 export const deleteNotification = async (req, res) => {
   try {
-    const n = await Notification.findOne({ _id: req.params.id, user: req.user._id });
-    if (!n) return res.status(404).json({ message: 'Notification not found' });
-    await n.deleteOne();
+    await deleteNotificationById(req.params.id, req.user._id);
     res.json({ message: 'Deleted' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    handleServiceError(res, error);
   }
 };

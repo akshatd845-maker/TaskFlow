@@ -4,8 +4,11 @@ import Board from '../models/Board.js';
 import Card from '../models/Card.js';
 import User from '../models/User.js';
 import { getListIdsForBoards, getUserBoardIds } from '../utils/boardAccess.js';
+import logger from '../config/logger.js';
 
 const toObjectId = (id) => {
+
+
   try {
     return new mongoose.Types.ObjectId(id);
   } catch {
@@ -29,6 +32,7 @@ const getUserListIds = async (userId) => {
   const boardIds = boards.map((b) => b._id);
   return getListIdsForBoards(boardIds);
 };
+
 
 export const getOverview = async (req, res) => {
   const userId = req.user?._id;
@@ -82,7 +86,7 @@ export const getOverview = async (req, res) => {
       completionRate: Number((totals.completionRate || 0).toFixed(2))
     });
   } catch (e) {
-    console.error(e);
+    logger.error('Failed to load analytics overview', { error: e?.message, stack: e?.stack });
     res.status(500).json({ message: 'Failed to load analytics overview' });
   }
 };
@@ -158,7 +162,7 @@ export const getProjectProgress = async (req, res) => {
     response.sort((a, b) => b.progress - a.progress);
     res.json(response);
   } catch (e) {
-    console.error(e);
+    logger.error('Failed to load project progress analytics', { error: e?.message, stack: e?.stack });
     res.status(500).json({ message: 'Failed to load project progress analytics' });
   }
 };
@@ -227,7 +231,7 @@ export const getTeamProductivity = async (req, res) => {
     response.sort((a, b) => b.completedTasks - a.completedTasks);
     res.json(response);
   } catch (e) {
-    console.error(e);
+    logger.error('Failed to load team productivity analytics', { error: e?.message, stack: e?.stack });
     res.status(500).json({ message: 'Failed to load team productivity analytics' });
   }
 };
@@ -259,7 +263,7 @@ export const getTaskStatus = async (req, res) => {
 
     res.json(agg || { completed: 0, pending: 0 });
   } catch (e) {
-    console.error(e);
+    logger.error('Failed to load task status analytics', { error: e?.message, stack: e?.stack });
     res.status(500).json({ message: 'Failed to load task status analytics' });
   }
 };

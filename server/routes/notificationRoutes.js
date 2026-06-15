@@ -8,7 +8,7 @@ import { notificationCreateSchema, notificationQuerySchema } from '../validators
 import {
   createNotification,
   getNotifications,
-  getUnreadCount,
+  getUnreadCountController as getUnreadCount,
   markAsRead,
   markAllRead,
   deleteNotification

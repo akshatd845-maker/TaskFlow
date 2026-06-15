@@ -66,7 +66,7 @@ const Projects = () => {
 
   const handleAddMember = async (email, role) => {
     try {
-      const updatedProject = await projectService.addMember(selectedProject._id, email, role);
+      const updatedProject = await projectService.inviteMember(selectedProject._id, { email, role });
       setProjects(projects.map(p => p._id === selectedProject._id ? updatedProject : p));
       setSelectedProject(updatedProject);
     } catch (err) {
@@ -116,7 +116,7 @@ const Projects = () => {
       active: 'bg-green-100 text-green-600',
       completed: 'bg-blue-100 text-blue-600',
       'on-hold': 'bg-yellow-100 text-yellow-600',
-      archived: 'bg-gray-100 text-gray-600'
+      archived: 'bg-gray-100 text-[#c7c4d8]'
     };
     return colors[status] || colors.active;
   };
@@ -134,18 +134,9 @@ const Projects = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-          <p className="text-gray-500 mt-1">Manage your projects and team</p>
+          <h1 className="text-2xl font-bold text-[#e4e1ee]" style={{ fontWeight: 700 }}>Projects</h1>
+          <p className="text-[#c7c4d8] mt-1">Manage your projects and team</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>New Project</span>
-        </button>
       </div>
 
       {/* Error Message */}
@@ -162,29 +153,35 @@ const Projects = () => {
 
       {/* Filter */}
       <div className="flex items-center space-x-2">
-        <span className="text-sm text-gray-600">Filter:</span>
+        <span className="text-sm text-[#c7c4d8]">Filter:</span>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 bg-[#1e1b2e] border border-gray-600 rounded-lg text-sm text-[#e4e1ee] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
         >
-          <option value="all">All Projects</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
-          <option value="on-hold">On Hold</option>
+          <option value="all" className="bg-[#1e1b2e] text-[#e4e1ee]">All Projects</option>
+          <option value="active" className="bg-[#1e1b2e] text-[#e4e1ee]">Active</option>
+          <option value="completed" className="bg-[#1e1b2e] text-[#e4e1ee]">Completed</option>
+          <option value="on-hold" className="bg-[#1e1b2e] text-[#e4e1ee]">On Hold</option>
         </select>
       </div>
 
       {/* Projects Grid */}
       {filteredProjects.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div
+          className="text-center py-16 rounded-3xl"
+          style={{ background: '#1f1f28', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            style={{ background: 'rgba(255,255,255,0.05)' }}
+          >
+            <svg className="w-8 h-8" style={{ color: '#918fa1' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-          <p className="text-gray-500 mb-4">Create your first project to get started</p>
+          <h3 className="text-lg font-medium mb-2" style={{ color: '#e4e1ee' }}>No projects found</h3>
+          <p className="mb-4" style={{ color: '#c7c4d8' }}>Create your first project to get started</p>
           <button
             onClick={() => setShowCreateModal(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
@@ -261,7 +258,7 @@ const ProjectCard = ({ project, currentUser, onEdit, onMembers, onDelete, onOpen
       <div className="p-5">
         {/* Title and Status */}
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate flex-1">
+          <h3 className="text-lg font-semibold text-[#e4e1ee] truncate flex-1">
             {project.title}
           </h3>
           <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(project.status)}`}>
@@ -271,7 +268,7 @@ const ProjectCard = ({ project, currentUser, onEdit, onMembers, onDelete, onOpen
 
         {/* Description */}
         {project.description && (
-          <p className="text-sm text-gray-500 mb-4 line-clamp-2">
+          <p className="text-sm text-[#c7c4d8] mb-4 line-clamp-2">
             {project.description}
           </p>
         )}
@@ -280,7 +277,7 @@ const ProjectCard = ({ project, currentUser, onEdit, onMembers, onDelete, onOpen
         <div className="flex items-center justify-between mb-4">
           <div className="flex -space-x-2">
             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white">
-              <span className="text-xs font-medium text-gray-600">
+              <span className="text-xs font-medium text-[#c7c4d8]">
                 {project.owner.name?.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -296,7 +293,7 @@ const ProjectCard = ({ project, currentUser, onEdit, onMembers, onDelete, onOpen
             ))}
             {project.members?.length > 3 && (
               <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border-2 border-white">
-                <span className="text-xs font-medium text-gray-500">
+                <span className="text-xs font-medium text-[#c7c4d8]">
                   +{project.members.length - 3}
                 </span>
               </div>
@@ -315,7 +312,7 @@ const ProjectCard = ({ project, currentUser, onEdit, onMembers, onDelete, onOpen
             </button>
             <Link
               to={`/projects/${project._id}/team`}
-              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-[#c7c4d8] hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Team"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -324,7 +321,7 @@ const ProjectCard = ({ project, currentUser, onEdit, onMembers, onDelete, onOpen
             </Link>
             <button
               onClick={onMembers}
-              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-[#c7c4d8] hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Manage Members"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -337,7 +334,7 @@ const ProjectCard = ({ project, currentUser, onEdit, onMembers, onDelete, onOpen
               {canEdit && (
               <button
                 onClick={onEdit}
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="p-2 text-[#c7c4d8] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                 title="Edit Project"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -348,7 +345,7 @@ const ProjectCard = ({ project, currentUser, onEdit, onMembers, onDelete, onOpen
               {isOwner && (
               <button
                 onClick={onDelete}
-                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-[#c7c4d8] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 title="Delete Project"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -395,51 +392,54 @@ const ProjectModal = ({ project, onClose, onSubmit, title }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+      <div className="rounded-xl shadow-2xl max-w-md w-full" style={{ background: '#1a1927', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="p-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <h2 className="text-xl font-bold text-[#e4e1ee]">{title}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+            <label className="block text-sm font-medium text-[#c7c4d8] mb-1">Project Name *</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 rounded-lg text-[#e4e1ee] placeholder-[#464555] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
               placeholder="Enter project name"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-[#c7c4d8] mb-1">Description</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-2 rounded-lg text-[#e4e1ee] placeholder-[#464555] focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
               rows={3}
               placeholder="Project description..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-[#c7c4d8] mb-1">Status</label>
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 rounded-lg text-[#e4e1ee] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              style={{ background: '#13121e', border: '1px solid rgba(255,255,255,0.1)' }}
             >
               {statuses.map(status => (
-                <option key={status.value} value={status.value}>{status.label}</option>
+                <option key={status.value} value={status.value} style={{ background: '#13121e', color: '#e4e1ee' }}>{status.label}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
+            <label className="block text-sm font-medium text-[#c7c4d8] mb-2">Color</label>
             <div className="flex gap-2 flex-wrap">
               {colors.map(color => (
                 <button
@@ -447,9 +447,9 @@ const ProjectModal = ({ project, onClose, onSubmit, title }) => {
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
                   className={`w-8 h-8 rounded-lg transition-transform ${
-                    formData.color === color ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' : ''
+                    formData.color === color ? 'ring-2 ring-offset-2 ring-blue-400 scale-110' : ''
                   }`}
-                  style={{ backgroundColor: color }}
+                  style={{ backgroundColor: color, ringOffsetColor: '#1a1927' }}
                 />
               ))}
             </div>
@@ -459,7 +459,10 @@ const ProjectModal = ({ project, onClose, onSubmit, title }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2 rounded-lg text-[#c7c4d8] transition-colors hover:text-[#e4e1ee]"
+              style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'transparent' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               Cancel
             </button>
@@ -489,10 +492,15 @@ const MembersModal = ({ project, onClose, onAddMember, onRemoveMember, currentUs
     if (!email) return;
     setLoading(true);
     setError('');
-    await onAddMember(email, role);
-    setEmail('');
-    setRole('member');
-    setLoading(false);
+    try {
+      await onAddMember(email, role);
+      setEmail('');
+      setRole('member');
+    } catch (err) {
+      setError(err?.response?.data?.message || err?.message || 'Failed to add member');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isOwner = project.owner._id === currentUser._id;
@@ -505,8 +513,8 @@ const MembersModal = ({ project, onClose, onAddMember, onRemoveMember, currentUs
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
         <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Team Members</h2>
-          <p className="text-sm text-gray-500 mt-1">{project.title}</p>
+          <h2 className="text-xl font-bold text-[#e4e1ee]">Team Members</h2>
+          <p className="text-sm text-[#c7c4d8] mt-1">{project.title}</p>
         </div>
 
         <div className="p-6 space-y-4">
@@ -555,8 +563,8 @@ const MembersModal = ({ project, onClose, onAddMember, onRemoveMember, currentUs
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{project.owner.name}</p>
-                  <p className="text-xs text-gray-500">{project.owner.email}</p>
+                  <p className="text-sm font-medium text-[#e4e1ee]">{project.owner.name}</p>
+                  <p className="text-xs text-[#c7c4d8]">{project.owner.email}</p>
                 </div>
               </div>
               <span className="text-xs px-2 py-1 bg-purple-100 text-purple-600 rounded-full">Owner</span>
@@ -567,25 +575,25 @@ const MembersModal = ({ project, onClose, onAddMember, onRemoveMember, currentUs
               <div key={member.user._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-gray-600 text-sm font-medium">
+                    <span className="text-[#c7c4d8] text-sm font-medium">
                       {member.user.name?.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{member.user.name}</p>
-                    <p className="text-xs text-gray-500">{member.user.email}</p>
+                    <p className="text-sm font-medium text-[#e4e1ee]">{member.user.name}</p>
+                    <p className="text-xs text-[#c7c4d8]">{member.user.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className={`text-xs px-2 py-1 rounded-full ${
-                    member.role === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+                    member.role === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-[#c7c4d8]'
                   }`}>
                     {member.role}
                   </span>
                   {canInvite && (
                     <button
                       onClick={() => onRemoveMember(member.user._id)}
-                      className="p-1 text-gray-400 hover:text-red-600"
+                      className="p-1 text-[#c7c4d8] hover:text-red-600"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -599,7 +607,7 @@ const MembersModal = ({ project, onClose, onAddMember, onRemoveMember, currentUs
 
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            className="w-full px-4 py-2 border border-gray-300 text-[#c7c4d8] rounded-lg hover:bg-gray-50"
           >
             Close
           </button>

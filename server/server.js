@@ -17,6 +17,8 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import helmet from 'helmet';
+import mongoSanitize from 'express-mongo-sanitize';
+import hpp from 'hpp';
 import http from 'http';
 import dns from 'dns';
 
@@ -72,19 +74,56 @@ app.use(helmet({
 }));
 
 // CORS configuration
-const corsOptions = process.env.CLIENT_URL
-  ? {
-      origin: process.env.CLIENT_URL,
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-      exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
-      maxAge: 86400 // 24 hours
-    }
-  : {
-      origin: true,
-      credentials: true
-    };
+// Strict production CORS policy - no wildcard origins allowed
+const isProduction = process.env.NODE_ENV === 'production';
+const clientUrl = process.env.CLIENT_URL;
+
+let corsOptions;
+
+if (isProduction) {
+  // Production: Strict origin validation
+  if (!clientUrl) {
+    throw new Error('CLIENT_URL is required in production. Set it in environment variables.');
+  }
+  corsOptions = {
+    origin: clientUrl, // Only allow the production client URL
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+    maxAge: 86400 // 24 hours
+  };
+} else {
+  // Development: Allow localhost
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000'
+  ];
+  corsOptions = {
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.) in development only
+      // But prefer to have explicit origins for security
+      if (!origin) {
+        return callback(null, true);
+      }
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // For development with explicit client URL, also allow that
+      if (clientUrl && origin === clientUrl) {
+        return callback(null, true);
+      }
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+    maxAge: 86400
+  };
+}
 
 app.use(cors(corsOptions));
 
@@ -94,7 +133,9 @@ app.use(globalLimiter);
 // Parse cookies and JSON with size limits
 app.use(cookieParser());
 app.use(express.json({ limit: '10kb' })); // Reduced from 1mb for security
+app.use(mongoSanitize());
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(hpp());
 
 // Request logging (skip health checks)
 if (process.env.NODE_ENV !== 'test') {

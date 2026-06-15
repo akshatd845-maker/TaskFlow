@@ -26,29 +26,42 @@ export const cardQuerySchema = Joi.object({
   search: Joi.string().trim().max(100).optional(),
   page: Joi.number().integer().min(1).default(1).optional(),
   limit: Joi.number().integer().min(1).max(100).default(10).optional(),
-  // Sort accepts multiple aliases. Backend normalizes these.
-  // Valid canonical options: newest | oldest | dueDate | priority | alphabetical
   sort: Joi.string().optional().default('newest').custom((value, helpers) => {
     if (value == null) return value;
     const allowed = new Set([
-      'newest',
-      'oldest',
-      'dueDate',
-      'dueDate',
-      'priority',
-      'alphabetical',
-      'duedate',
-      'due_date'
+      'newest', 'oldest', 'dueDate', 'priority', 'alphabetical', 'duedate', 'due_date'
     ]);
-    if (!allowed.has(value)) {
-      return helpers.error('any.invalid');
-    }
+    if (!allowed.has(value)) return helpers.error('any.invalid');
     return value;
   }, 'sort alias validation'),
-
-  status: Joi.string().valid('pending', 'in-progress', 'completed').optional(),
+  status: Joi.string().valid('todo', 'in-progress', 'review', 'done').optional(),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional(),
   assignedTo: objectIdLike.optional()
+});
+
+// ── New validators for previously unvalidated routes ─────────────────────────
+
+export const cardMoveSchema = Joi.object({
+  listId: objectIdLike.required().messages({
+    'any.required': 'Target list ID is required',
+    'string.pattern.base': 'Target list ID must be a valid MongoDB ObjectId'
+  }),
+  position: Joi.number().integer().min(0).optional()
+});
+
+export const cardCommentSchema = Joi.object({
+  text: Joi.string().trim().min(1).max(2000).required().messages({
+    'any.required': 'Comment text is required',
+    'string.empty': 'Comment cannot be empty',
+    'string.max': 'Comment cannot exceed 2000 characters'
+  })
+});
+
+export const cardAssignSchema = Joi.object({
+  userId: objectIdLike.required().messages({
+    'any.required': 'User ID is required',
+    'string.pattern.base': 'User ID must be a valid MongoDB ObjectId'
+  })
 });
 
 

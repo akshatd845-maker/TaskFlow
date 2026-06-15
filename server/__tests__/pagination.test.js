@@ -32,7 +32,7 @@ describe('pagination utility', () => {
     });
 
     it('should enforce maximum limit', () => {
-      const result = parsePagination({}, { maxLimit: 50 });
+      const result = parsePagination({ limit: '100' }, { maxLimit: 50 });
       expect(result.limit).toBe(50);
     });
 
@@ -51,8 +51,8 @@ describe('pagination utility', () => {
     });
 
     it('should handle exact division', () => {
-      const meta = buildPaginationMeta(20, 10);
-      expect(meta.totalPages).toBe(2);
+      const meta = buildPaginationMeta(10, 10);
+      expect(meta.totalPages).toBe(1);
       expect(meta.hasMore).toBe(false);
     });
 

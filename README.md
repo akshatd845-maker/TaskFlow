@@ -1,297 +1,234 @@
+<div align="center">
+
 # TaskFlow
 
-TaskFlow is a full-stack project management tool inspired by Trello and Asana. It helps teams organize work into **Projects**, **Lists (columns)**, and **Cards (tasks)** with comments, priorities, due dates, and notifications.
+**Enterprise Project Management Platform**
 
-> Built with the **MERN** stack (MongoDB, Express, React, Node.js)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![MongoDB](https://img.shields.io/badge/MongoDB-8.x-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://mongodb.com)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.x-010101?style=flat-square&logo=socket.io&logoColor=white)](https://socket.io)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-c3c0ff?style=flat-square)](LICENSE)
+
+A real-time project management platform for engineering teams — Kanban boards, role-based collaboration, live updates, and analytics in a dark-first enterprise interface.
+
+[Installation](#installation) · [Documentation](docs/PROJECT_DOCUMENTATION.md) · [Deployment](#deployment) · [Roadmap](#roadmap)
+
+</div>
 
 ---
 
-## Project Overview
+## Overview
 
-TaskFlow provides a collaborative workspace where users can:
+TaskFlow is a full-stack SaaS platform combining project tracking, Kanban task management, team collaboration, and real-time analytics. Built on the MERN stack with Socket.IO, it features cookie-based JWT authentication with persistent token revocation, granular role-based access control, and live board synchronisation across all connected clients.
 
-- Create and manage multiple projects
-- Organize work into lists and cards
-- Assign members, update roles, and collaborate via comments
-- Track task progress and receive real-time notifications
+Designed to be self-hostable, production-grade, and straightforward to extend.
 
 ---
 
 ## Features
 
-- **Authentication & Authorization**
-  - JWT-based login/registration
-  - Protected routes (role-aware permissions)
-- **Projects (Boards)**
-  - Create, update, delete, and archive projects
-  - Manage members and member roles (owner/admin/member)
-- **Lists / Columns**
-  - Organize cards within a project
-  - Reorder lists
-- **Cards / Tasks**
-  - Titles, descriptions, priorities, due dates
-  - Move cards between lists
-  - Assign/unassign members
-- **Collaboration**
-  - Comment threads per card
-- **Notifications**
-  - Notification model persisted in MongoDB
-  - Real-time delivery with Socket.IO
-- **Analytics**
-  - Overview metrics, project progress, team productivity, task status breakdown
-- **Responsive UI**
-  - Tailwind-based responsive layout
-
----
-
-## Screenshots
-
-Add your screenshots here. Suggested captures:
-
-1. Login / Register
-2. Dashboard
-3. Projects page
-4. Team / Member management
-5. Board (Kanban) view
-6. Card details with comments
-7. Notifications bell
-
-Example layout:
-
-```md
-![Login](./screenshots/login.png)
-![Dashboard](./screenshots/dashboard.png)
-![Board](./screenshots/board.png)
-```
+- **Authentication** — HttpOnly cookie JWTs, persistent token revocation (MongoDB TTL), bcrypt password hashing
+- **Project Management** — multi-project workspaces, auto-provisioned Kanban boards, cascading deletes
+- **Kanban Board** — drag-and-drop cards with priorities, due dates, labels, checklists, and assignees
+- **RBAC** — three-tier permission model (`owner` / `admin` / `member`) enforced at every API route
+- **Real-Time** — live card events, notifications, and online presence via Socket.IO board rooms
+- **Team Collaboration** — invite by email, role management, per-project and per-board membership
+- **Analytics Dashboard** — task completion rates, project progress, and team productivity charts
+- **Search & Filter** — cross-board task search with status and priority filtering, paginated results
+- **Security** — Helmet, CORS, rate limiting, Joi validation, `express-mongo-sanitize` on every request
 
 ---
 
 ## Tech Stack
 
-### Frontend
-- **React** (Vite)
-- **Tailwind CSS**
-- **Axios**
-- React Router
-
-### Backend
-- **Node.js**
-- **Express.js**
-- **MongoDB** (MongoDB Atlas recommended)
-- **Mongoose** ODM
-- **JWT** authentication
-- **Socket.IO** for real-time notifications
+| Layer | Technologies |
+|---|---|
+| **Frontend** | React 18, Vite, Tailwind CSS, React Router 6, Axios, Socket.IO Client, Recharts, @hello-pangea/dnd |
+| **Backend** | Node.js ≥ 18, Express 4, MongoDB 8, Mongoose, Socket.IO 4 |
+| **Auth & Security** | JWT (jti revocation), bcryptjs, Helmet, express-rate-limit, express-mongo-sanitize, Joi |
+| **Logging** | Winston (structured, with sensitive-field redaction) |
+| **Testing** | Jest, Supertest (server) · Vitest (client) |
 
 ---
 
-## Installation Guide
+## Architecture
 
-### Prerequisites
+```
+┌─────────────────────────────────────────┐
+│   React Client (Vite + Tailwind CSS)    │
+│   Context · Pages · Components          │
+└──────────────┬──────────────────────────┘
+               │ REST + WebSocket
+┌──────────────▼──────────────────────────┐
+│   Express API (Helmet · CORS · Rate)    │
+│   protect → validate(Joi) → controller  │
+│   Services · Repositories · Utils       │
+└──────────────┬──────────────────────────┘
+               │
+┌──────────────▼──────────────────────────┐
+│   MongoDB (Mongoose)                    │
+│   Compound indexes · TTL collections   │
+│   users · projects · boards · cards    │
+│   notifications · revokedtokens        │
+└─────────────────────────────────────────┘
+```
 
-- Node.js **18+**
-- MongoDB Atlas (or local MongoDB)
-- npm
+> See [Architecture & API Reference](docs/PROJECT_DOCUMENTATION.md) for the full diagram, Socket.IO event table, security implementation, and endpoint documentation.
 
-### 1) Clone the repository
+---
+
+## Installation
+
+**Prerequisites:** Node.js ≥ 18, npm ≥ 9, MongoDB (local or Atlas)
 
 ```bash
-cd TaskFlow
-```
+# 1. Clone
+git clone https://github.com/your-username/taskflow.git
+cd taskflow
 
-### 2) Install dependencies
+# 2. Install all dependencies (root + client + server)
+npm run install-all
 
-```bash
-npm install
-cd server
-npm install
-cd ../client
-npm install
-```
+# 3. Configure environment variables
+cp server/.env.example server/.env
+# Edit server/.env with your values (see section below)
 
-### 3) Configure environment variables
-
-Create server env file:
-
-```bash
-cd server
-# copy from template if available
-# cp .env.example .env
-```
-
-Then set:
-
-```env
-PORT=5000
-NODE_ENV=development
-MONGODB_URI=your_mongodb_connection_string
-# Optional fallback if your environment blocks mongodb+srv SRV/DNS resolution
-# (use only the "direct connection" string from Atlas)
-MONGODB_URI_DIRECT=your_direct_mongodb_connection_string
-JWT_SECRET=your_secret_key
-CLIENT_URL=http://localhost:5173
-```
-
-
-Client env (in `client/`):
-
-```env
-VITE_API_URL=http://localhost:5000/api
-```
-
-> The server reads `process.env.MONGODB_URI`, `process.env.JWT_SECRET`, `process.env.PORT`, and `process.env.CLIENT_URL`.
-
-### 4) Run the app (development)
-
-```bash
+# 4. Start both servers
 npm run dev
 ```
 
-Or run separately:
-
-- Terminal 1 (server)
-
-```bash
-cd server
-npm run dev
-```
-
-- Terminal 2 (client)
-
-```bash
-cd client
-npm run dev
-```
-
-### Access
-
-- Frontend: `http://localhost:5173`
-- Backend health check: `http://localhost:5000/api/health`
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:5000/api |
+| Health check | http://localhost:5000/api/health |
 
 ---
 
 ## Environment Variables
 
-### Server (`server/.env`)
+### `server/.env`
 
-- `PORT` — Backend port (default: `5000`)
-- `NODE_ENV` — Environment mode
-- `MONGODB_URI` — MongoDB connection string
-- `JWT_SECRET` — Secret used to sign JWT tokens
-- `CLIENT_URL` — Allowed client origin for CORS / Socket connections
+| Variable | Required | Description |
+|---|---|---|
+| `MONGODB_URI` | ✅ | MongoDB connection string (Atlas SRV or local) |
+| `JWT_SECRET` | ✅ | Random secret ≥ 32 chars — generate with `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
+| `PORT` | ✅ | Server port (default `5000`) |
+| `CLIENT_URL` | ✅ | Frontend URL for CORS (e.g. `http://localhost:5173`) |
+| `NODE_ENV` | ✅ | `development` or `production` |
+| `JWT_EXPIRE` | — | Token lifetime (default `7d`) |
+| `LOG_LEVEL` | — | Winston level: `error` · `warn` · `info` · `debug` |
 
-### Client (`client/.env`)
+### `client/.env`
 
-- `VITE_API_URL` — Base URL for API calls (e.g. `http://localhost:5000/api`)
-
----
-
-## API Documentation
-
-Base paths used in this project:
-- Auth: `/api/auth`
-- Projects/Boards: `/api/projects`
-- Boards: `/api/boards`
-- Lists: `/api/lists`
-- Cards: `/api/cards`
-- Comments: `/api/comments`
-- Notifications: `/api/notifications`
-- Analytics: `/api/analytics`
-
-> Many routes are protected with JWT middleware.
-
-### Health
-- `GET /api/health`
-
-Response:
-```json
-{ "status": "ok", "message": "TaskFlow API is running" }
-```
+| Variable | Description |
+|---|---|
+| `VITE_API_URL` | Backend API base URL — defaults to `/api` (Vite proxy handles it in dev) |
+| `VITE_SOCKET_URL` | Socket.IO server URL — defaults to `window.location.origin` |
 
 ---
 
-### Authentication
-- `POST /api/auth/register` — Register a new user
-- `POST /api/auth/login` — Login user
-- `GET /api/auth/me` — Get current user
-- `PUT /api/auth/profile` — Update profile
-- `PUT /api/auth/password` — Update password
-
----
-
-### Projects (Boards)
-- `GET /api/projects` — Get projects for the authenticated user (supports search/pagination)
-- `GET /api/projects/:id` — Get a single project if authorized
-- `POST /api/projects` — Create a project
-- `PUT /api/projects/:id` — Update project
-- `DELETE /api/projects/:id` — Delete project
-
-Member management:
-- `GET /api/projects/:id/members` — Get project members (supports filtering/pagination)
-- `POST /api/projects/:id/members` — Invite member by email (role: `admin|member`)
-- `PUT /api/projects/:id/members/:userId` — Change member role
-- `DELETE /api/projects/:id/members/:userId` — Remove member
-
----
-
-### Analytics
-Routes are JWT-protected.
-- `GET /api/analytics/overview`
-- `GET /api/analytics/project-progress`
-- `GET /api/analytics/team-productivity`
-- `GET /api/analytics/task-status`
-
----
-
-### Real-time Notifications (Socket.IO)
-
-- Socket.IO is initialized on the server.
-- Notifications are emitted to a room/user (see server socket handler usage).
-- Client subscribes via the Socket context.
-
----
-
-## Deployment Instructions
-
-### Recommended production setup
-
-1. Build the client
+## Running Locally
 
 ```bash
-cd client
-npm run build
+# Both servers (recommended)
+npm run dev
+
+# Backend only
+npm run server
+
+# Frontend only
+npm run client
+
+# Production build
+npm run build          # builds React → client/dist
+cd server && npm start # starts Express in production mode
 ```
 
-2. Set environment variables in production (server + client)
+---
 
-3. Run the backend with a process manager (recommended)
+## Deployment
 
-Examples:
-- Use **pm2**
-- Or run with Docker
-- Or configure as a system service
+| Platform | Service | Notes |
+|---|---|---|
+| [Vercel](https://vercel.com) | Frontend | Root dir: `client` · Build: `npm run build` · Output: `dist` |
+| [Railway](https://railway.app) | Backend | Root dir: `server` · Start: `node server.js` |
+| [Render](https://render.com) | Backend | Web Service · Build: `npm install` · Start: `node server.js` |
+| [MongoDB Atlas](https://cloud.mongodb.com) | Database | Free M0 tier works for development |
 
-### CORS / Client origin
+Set `CLIENT_URL` on your backend to your Vercel URL and `VITE_API_URL` on your frontend to your backend URL.
 
-Ensure `CLIENT_URL` matches your deployed frontend origin (e.g. `https://yourdomain.com`).
+> Full step-by-step deployment instructions in [docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md).
 
-### MongoDB
+---
 
-Use a production MongoDB URI (Atlas recommended). Ensure network access is allowed from your deployment environment.
+## Folder Structure
 
-### WebSockets
+```
+taskflow/
+├── client/                  # React frontend (Vite)
+│   └── src/
+│       ├── components/      # Kanban, Navbar, Sidebar, Notifications, Team
+│       ├── context/         # AuthContext, ThemeContext
+│       ├── pages/           # Dashboard, Board, Projects, Tasks, Settings...
+│       ├── services/        # Axios modules + Socket.IO client helpers
+│       └── routes/          # AppRoutes with lazy loading
+├── server/                  # Express backend
+│   ├── config/              # DB, env validation, logger, rate limiter
+│   ├── controllers/         # Thin HTTP handlers
+│   ├── middleware/          # auth, validate, validateObjectId, errorHandler
+│   ├── models/              # Mongoose schemas (User, Board, Card, RevokedToken...)
+│   ├── repositories/        # Data access layer
+│   ├── routes/              # Route definitions
+│   ├── services/            # Business logic
+│   ├── utils/               # RBAC, token blocklist, escapeRegex, authCookie
+│   ├── validators/          # Joi schemas per resource
+│   └── __tests__/           # Integration and unit tests
+└── docs/
+    └── PROJECT_DOCUMENTATION.md  # Full API, Socket.IO, security, and testing docs
+```
 
-Socket.IO requires that your hosting environment allows WebSocket upgrade.
+---
+
+## Roadmap
+
+| Feature | Status |
+|---|---|
+| Calendar view | 🔵 In progress |
+| Gantt chart | 📋 Planned |
+| AI task suggestions | 📋 Planned |
+| Mobile app (React Native) | 📋 Planned |
+| Webhooks | 📋 Planned |
+| Third-party integrations (GitHub, Slack) | 📋 Planned |
+| Time tracking | 📋 Planned |
+| SSO / OAuth (Google, GitHub) | 📋 Planned |
+
+---
+
+## Contributing
+
+1. Fork the repo and create a branch: `git checkout -b feat/your-feature`
+2. Follow the existing architecture — logic in `services/`, validation via Joi, DB access via `repositories/`
+3. Write tests for your changes
+4. Open a pull request with a clear description
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org): `feat:`, `fix:`, `docs:`, `refactor:`, `test:`
 
 ---
 
 ## License
 
-MIT
+MIT © 2026 TaskFlow Contributors — see [LICENSE](LICENSE) for full text.
 
 ---
 
-## Notes
+<div align="center">
 
-- Replace the placeholder screenshots with actual images placed under `./screenshots/` (create the folder if needed).
-- This README can be extended with request/response examples per endpoint if you want API docs generated with OpenAPI/Swagger.
+Built by **Akshat** — full-stack engineer
 
+[![GitHub](https://img.shields.io/badge/GitHub-your--username-181717?style=flat-square&logo=github)](https://github.com/akshatd845-maker)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat-square&logo=linkedin)](www.linkedin.com/in/akshatdixit001)
+
+</div>

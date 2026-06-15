@@ -1,9 +1,9 @@
 import express from 'express';
 import {
-  createList,
-  updateList,
-  deleteList,
-  reorderLists
+  createListController as createList,
+  updateListController as updateList,
+  deleteListController as deleteList,
+  reorderListsController as reorderLists
 } from '../controllers/listController.js';
 import { protect } from '../middleware/auth.js';
 import { requireDbConnected } from '../utils/databaseHealth.js';

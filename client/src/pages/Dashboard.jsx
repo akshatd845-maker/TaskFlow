@@ -120,9 +120,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="h-72 flex items-center justify-center">
-            <div className="relative w-full h-full">
-              <ResponsiveContainer width="100%" height="100%">
+          <div className="h-72 relative">
+            <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={completionPie}
@@ -139,20 +138,20 @@ const Dashboard = () => {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px'
+                      backgroundColor: '#1f1f28',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '8px',
+                      color: '#e4e1ee'
                     }}
                   />
                 </PieChart>
               </ResponsiveContainer>
 
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{overview.completionRate || 0}%</div>
                 <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Completion</div>
               </div>
             </div>
-          </div>
 
           <div className="mt-4 flex flex-wrap gap-3">
             {completionPie.map((item) => (

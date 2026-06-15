@@ -1,20 +1,21 @@
 const StatsCard = ({ title, value, icon, trend, trendValue, color }) => {
+  // Keep the existing semantic colors, but make them dark-mode readable.
   const colorClasses = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    orange: 'bg-orange-50 text-orange-600',
-    purple: 'bg-purple-50 text-purple-600',
-    red: 'bg-red-50 text-red-600',
-    indigo: 'bg-indigo-50 text-indigo-600'
+    blue: 'bg-blue-500/10 text-primary',
+    green: 'bg-green-500/10 text-green-200',
+    orange: 'bg-orange-500/10 text-orange-200',
+    purple: 'bg-purple-500/10 text-purple-200',
+    red: 'bg-red-500/10 text-red-200',
+    indigo: 'bg-indigo-500/10 text-primary'
   };
 
   const iconBgClasses = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    orange: 'bg-orange-500',
-    purple: 'bg-purple-500',
-    red: 'bg-red-500',
-    indigo: 'bg-indigo-500'
+    blue: 'bg-blue-500/30',
+    green: 'bg-green-500/30',
+    orange: 'bg-orange-500/30',
+    purple: 'bg-purple-500/30',
+    red: 'bg-red-500/30',
+    indigo: 'bg-indigo-500/30'
   };
 
   return (

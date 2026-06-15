@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { authService } from '../services/authService';
 import { joinUser, leaveUser, connectSocket, disconnectSocket } from '../services/socket';
 
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user]);
 
-  const register = async (name, email, password) => {
+  const register = useCallback(async (name, email, password) => {
     setError(null);
     try {
       const userData = await authService.register(name, email, password);
@@ -60,9 +60,9 @@ export const AuthProvider = ({ children }) => {
       setError(message);
       throw new Error(message);
     }
-  };
+  }, []);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     setError(null);
     try {
       const userData = await authService.login(email, password);
@@ -75,22 +75,26 @@ export const AuthProvider = ({ children }) => {
       setError(message);
       throw new Error(message);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authService.logout();
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
       localStorage.removeItem('user');
-      if (user?._id) leaveUser(user._id);
+      setUser(prevUser => {
+        if (prevUser?._id) {
+          leaveUser(prevUser._id);
+        }
+        return null;
+      });
       disconnectSocket();
-      setUser(null);
     }
-  };
+  }, []);
 
-  const updateProfile = async (data) => {
+  const updateProfile = useCallback(async (data) => {
     setError(null);
     try {
       const userData = await authService.updateProfile(data);
@@ -102,9 +106,9 @@ export const AuthProvider = ({ children }) => {
       setError(message);
       throw new Error(message);
     }
-  };
+  }, []);
 
-  const updatePassword = async (currentPassword, newPassword) => {
+  const updatePassword = useCallback(async (currentPassword, newPassword) => {
     setError(null);
     try {
       return await authService.updatePassword(currentPassword, newPassword);
@@ -113,11 +117,11 @@ export const AuthProvider = ({ children }) => {
       setError(message);
       throw new Error(message);
     }
-  };
+  }, []);
 
-  const clearError = () => setError(null);
+  const clearError = useCallback(() => setError(null), []);
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     loading,
     error,
@@ -128,7 +132,17 @@ export const AuthProvider = ({ children }) => {
     updatePassword,
     clearError,
     isAuthenticated: !!user
-  };
+  }), [
+    user,
+    loading,
+    error,
+    register,
+    login,
+    logout,
+    updateProfile,
+    updatePassword,
+    clearError
+  ]);
 
   return (
     <AuthContext.Provider value={value}>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect, useCallback, memo } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import Column from './Column';
 import { cardAPI } from '../services/api';
@@ -10,7 +10,7 @@ const listIdFromRef = (ref) => {
   return ref._id?.toString() || ref.toString();
 };
 
-const KanbanBoard = ({ board, setBoard, onCardClick, onAddCard, onDeleteList, onEditCard, onDeleteCard }) => {
+const KanbanBoard = memo(({ board, setBoard, onCardClick, onAddCard, onDeleteList, onEditCard, onDeleteCard }) => {
   useEffect(() => {
     if (!board) return;
     joinBoard(board._id);
@@ -85,17 +85,18 @@ const KanbanBoard = ({ board, setBoard, onCardClick, onAddCard, onDeleteList, on
     };
   }, [board?._id, setBoard]);
 
-  const onDragEnd = async (result) => {
+  const onDragEnd = useCallback(async (result) => {
     const { destination, source, draggableId } = result;
     if (!destination) return;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
     const startId = source.droppableId;
     const endId = destination.droppableId;
-    const previousBoard = board;
+    let previousBoard = null;
 
     setBoard((prev) => {
       if (!prev) return prev;
+      previousBoard = prev; // Capture state before modification
       const lists = prev.lists.map((list) => ({ ...list, cards: Array.from(list.cards || []) }));
 
       const sourceList = lists.find((l) => l._id === startId);
@@ -112,14 +113,16 @@ const KanbanBoard = ({ board, setBoard, onCardClick, onAddCard, onDeleteList, on
       await cardAPI.move(draggableId, { listId: endId, position: destination.index });
     } catch (err) {
       console.error('Error moving card', err);
-      setBoard(previousBoard);
+      if (previousBoard) {
+        setBoard(previousBoard);
+      }
     }
-  };
+  }, [setBoard]);
 
   return (
     <div className="flex h-full space-x-4">
       <DragDropContext onDragEnd={onDragEnd}>
-        {(board.lists || []).sort((a, b) => a.position - b.position).map((list) => (
+        {[...(board.lists || [])].sort((a, b) => a.position - b.position).map((list) => (
           <Column
             key={list._id}
             list={list}
@@ -133,6 +136,6 @@ const KanbanBoard = ({ board, setBoard, onCardClick, onAddCard, onDeleteList, on
       </DragDropContext>
     </div>
   );
-};
+});
 
 export default KanbanBoard;

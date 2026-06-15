@@ -6,30 +6,35 @@
 
 import Joi from 'joi';
 
-const envSchema = Joi.object({
+const baseSchema = {
   // Server
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
   PORT: Joi.number().port().default(5000),
+  JWT_EXPIRE: Joi.string().default('7d'),
+  CLIENT_URL: Joi.string().uri().optional(),
+  RATE_LIMIT_WINDOW_MS: Joi.number().min(1000).default(15 * 60 * 1000), // 15 minutes
+  RATE_LIMIT_MAX_REQUESTS: Joi.number().min(1).default(100)
+};
 
-  // MongoDB
+// For test environment, skip MONGODB_URI validation since test setup handles DB
+const testSchema = Joi.object({
+  ...baseSchema,
+  NODE_ENV: Joi.string().valid('test').default('test'),
+  MONGODB_URI: Joi.string().optional(),
+  JWT_SECRET: Joi.string().optional()
+});
+
+// For production/development, validate everything
+const prodSchema = Joi.object({
+  ...baseSchema,
   MONGODB_URI: Joi.string().uri().required()
     .messages({ 'any.required': 'MONGODB_URI is required' }),
-
-  // JWT
   JWT_SECRET: Joi.string().min(32).required()
     .messages({
       'string.min': 'JWT_SECRET must be at least 32 characters for production security',
       'any.required': 'JWT_SECRET is required'
-    }),
-  JWT_EXPIRE: Joi.string().default('7d'),
-
-  // CORS
-  CLIENT_URL: Joi.string().uri().optional(),
-
-  // Rate Limiting
-  RATE_LIMIT_WINDOW_MS: Joi.number().min(1000).default(15 * 60 * 1000), // 15 minutes
-  RATE_LIMIT_MAX_REQUESTS: Joi.number().min(1).default(100)
-}).unknown(true); // Allow additional env vars
+    })
+}).unknown(true);
 
 /**
  * Validate and return environment configuration
@@ -37,7 +42,11 @@ const envSchema = Joi.object({
  * @throws {Error} If validation fails
  */
 export const validateEnv = () => {
-  const { error, value } = envSchema.validate(process.env, {
+  // Use appropriate schema based on NODE_ENV
+  const isTest = process.env.NODE_ENV === 'test';
+  const schema = isTest ? testSchema : prodSchema;
+
+  const { error, value } = schema.validate(process.env, {
     abortEarly: false,
     stripUnknown: true
   });
@@ -50,7 +59,7 @@ export const validateEnv = () => {
 
   // Warn about development settings in production
   if (value.NODE_ENV === 'production') {
-    if (value.JWT_SECRET.length < 64) {
+    if (value.JWT_SECRET && value.JWT_SECRET.length < 64) {
       console.warn('WARNING: JWT_SECRET should be at least 64 characters in production');
     }
     if (value.CLIENT_URL === undefined) {

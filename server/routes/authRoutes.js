@@ -1,5 +1,6 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
+import { sensitiveOpLimiter } from '../config/rateLimiter.js';
 import {
   register,
   login,
@@ -27,6 +28,6 @@ router.use(protect);
 router.post('/logout', logout);
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
-router.put('/password', updatePassword);
+router.put('/password', sensitiveOpLimiter, updatePassword);
 
 export default router;

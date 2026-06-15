@@ -1,9 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { boardAPI, listAPI, cardAPI } from '../services/api';
-import CommentSection from '../components/comments/CommentSection';
 import KanbanBoard from '../components/KanbanBoard';
+import CardDetail from '../components/CardDetail';
+
+const getPriorityColor = (priority) => {
+  const colors = {
+    low: 'bg-gray-100 text-gray-600',
+    medium: 'bg-blue-100 text-blue-600',
+    high: 'bg-orange-100 text-orange-600',
+    urgent: 'bg-red-100 text-red-600'
+  };
+  return colors[priority] || colors.medium;
+};
+
+const formatDate = (date) => {
+  if (!date) return null;
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+};
 
 const Board = () => {
   const { id } = useParams();
@@ -20,11 +38,7 @@ const Board = () => {
   const [creatingCard, setCreatingCard] = useState(false);
   const [listIdForCard, setListIdForCard] = useState(null);
 
-  useEffect(() => {
-    fetchBoard();
-  }, [id]);
-
-  const fetchBoard = async () => {
+  const fetchBoard = useCallback(async () => {
     try {
       const response = await boardAPI.getOne(id);
       setBoard(response.data);
@@ -34,9 +48,13 @@ const Board = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
 
-  const handleAddList = async (e) => {
+  useEffect(() => {
+    fetchBoard();
+  }, [fetchBoard]);
+
+  const handleAddList = useCallback(async (e) => {
     e.preventDefault();
     setAddingList(true);
 
@@ -45,10 +63,10 @@ const Board = () => {
         name: newListName,
         boardId: id
       });
-      setBoard({
-        ...board,
-        lists: [...(board.lists || []), response.data]
-      });
+      setBoard(prev => ({
+        ...prev,
+        lists: [...(prev.lists || []), response.data]
+      }));
       setNewListName('');
       setShowAddList(false);
     } catch (err) {
@@ -56,31 +74,31 @@ const Board = () => {
     } finally {
       setAddingList(false);
     }
-  };
+  }, [id, newListName]);
 
-  const handleDeleteList = async (listId) => {
+  const handleDeleteList = useCallback(async (listId) => {
     if (!window.confirm('Are you sure you want to delete this list and all its cards?')) {
       return;
     }
 
     try {
       await listAPI.delete(listId);
-      setBoard({
-        ...board,
-        lists: board.lists.filter(l => l._id !== listId)
-      });
+      setBoard(prev => ({
+        ...prev,
+        lists: prev.lists.filter(l => l._id !== listId)
+      }));
     } catch (err) {
       console.error('Error deleting list:', err);
     }
-  };
+  }, []);
 
-  const handleAddCard = (listId) => {
+  const handleAddCard = useCallback((listId) => {
     setListIdForCard(listId);
     setNewCard({ title: '', description: '', priority: 'medium' });
     setShowCardModal(true);
-  };
+  }, []);
 
-  const handleCreateCard = async (e) => {
+  const handleCreateCard = useCallback(async (e) => {
     e.preventDefault();
     setCreatingCard(true);
 
@@ -90,14 +108,15 @@ const Board = () => {
         listId: listIdForCard
       });
 
-      const updatedLists = board.lists.map(list => {
-        if (list._id === listIdForCard) {
-          return { ...list, cards: [...(list.cards || []), response.data] };
-        }
-        return list;
+      setBoard(prev => {
+        const updatedLists = prev.lists.map(list => {
+          if (list._id === listIdForCard) {
+            return { ...list, cards: [...(list.cards || []), response.data] };
+          }
+          return list;
+        });
+        return { ...prev, lists: updatedLists };
       });
-
-      setBoard({ ...board, lists: updatedLists });
       setShowCardModal(false);
       setNewCard({ title: '', description: '', priority: 'medium' });
     } catch (err) {
@@ -105,14 +124,14 @@ const Board = () => {
     } finally {
       setCreatingCard(false);
     }
-  };
+  }, [newCard, listIdForCard]);
 
-  const handleCardClick = (card) => {
+  const handleCardClick = useCallback((card) => {
     setSelectedCard(card);
     setShowCardModal(true);
-  };
+  }, []);
 
-  const handleDeleteCard = async (cardId) => {
+  const handleDeleteCard = useCallback(async (cardId) => {
     if (!window.confirm('Are you sure you want to delete this card?')) {
       return;
     }
@@ -120,69 +139,53 @@ const Board = () => {
     try {
       await cardAPI.delete(cardId);
 
-      const updatedLists = board.lists.map(list => ({
-        ...list,
-        cards: list.cards.filter(c => c._id !== cardId)
-      }));
-
-      setBoard({ ...board, lists: updatedLists });
+      setBoard(prev => {
+        const updatedLists = prev.lists.map(list => ({
+          ...list,
+          cards: list.cards.filter(c => c._id !== cardId)
+        }));
+        return { ...prev, lists: updatedLists };
+      });
       setShowCardModal(false);
     } catch (err) {
       console.error('Error deleting card:', err);
     }
-  };
+  }, []);
 
-  const handleUpdateCard = async (cardId, data) => {
+  const handleUpdateCard = useCallback(async (cardId, data) => {
     try {
       const response = await cardAPI.update(cardId, data);
 
-      const updatedLists = board.lists.map(list => ({
-        ...list,
-        cards: list.cards.map(c => c._id === cardId ? response.data : c)
-      }));
-
-      setBoard({ ...board, lists: updatedLists });
+      setBoard(prev => {
+        const updatedLists = prev.lists.map(list => ({
+          ...list,
+          cards: list.cards.map(c => c._id === cardId ? response.data : c)
+        }));
+        return { ...prev, lists: updatedLists };
+      });
       setSelectedCard(response.data);
     } catch (err) {
       console.error('Error updating card:', err);
     }
-  };
+  }, []);
 
-  const handleMoveCard = async (cardId, targetListId) => {
+  const handleMoveCard = useCallback(async (cardId, targetListId) => {
     try {
       const response = await cardAPI.move(cardId, { listId: targetListId });
 
-      // Remove from old list and add to new list
-      const updatedLists = board.lists.map(list => {
-        if (list._id === targetListId) {
-          return { ...list, cards: [...(list.cards || []), response.data] };
-        }
-        return { ...list, cards: list.cards.filter(c => c._id !== cardId) };
+      setBoard(prev => {
+        const updatedLists = prev.lists.map(list => {
+          if (list._id === targetListId) {
+            return { ...list, cards: [...(list.cards || []), response.data] };
+          }
+          return { ...list, cards: list.cards.filter(c => c._id !== cardId) };
+        });
+        return { ...prev, lists: updatedLists };
       });
-
-      setBoard({ ...board, lists: updatedLists });
     } catch (err) {
       console.error('Error moving card:', err);
     }
-  };
-
-  const getPriorityColor = (priority) => {
-    const colors = {
-      low: 'bg-gray-100 text-gray-600',
-      medium: 'bg-blue-100 text-blue-600',
-      high: 'bg-orange-100 text-orange-600',
-      urgent: 'bg-red-100 text-red-600'
-    };
-    return colors[priority] || colors.medium;
-  };
-
-  const formatDate = (date) => {
-    if (!date) return null;
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -371,149 +374,6 @@ const Board = () => {
           </div>
         </div>
       )}
-    </div>
-  );
-};
-
-// Card Detail Component
-const CardDetail = ({ card, lists, onClose, onUpdate, onDelete, onMove }) => {
-  const [title, setTitle] = useState(card.title);
-  const [description, setDescription] = useState(card.description || '');
-  const [priority, setPriority] = useState(card.priority);
-  const [dueDate, setDueDate] = useState(card.dueDate ? card.dueDate.split('T')[0] : '');
-  const [movingCard, setMovingCard] = useState(false);
-  const [selectedListId, setSelectedListId] = useState('');
-
-  const handleSave = () => {
-    onUpdate(card._id, {
-      title,
-      description,
-      priority,
-      dueDate: dueDate || null
-    });
-  };
-
-  const handleMove = () => {
-    if (selectedListId) {
-      onMove(card._id, selectedListId);
-      onClose();
-    }
-  };
-
-  return (
-    <div className="p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3 flex-1">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={handleSave}
-            className="text-xl font-bold text-gray-900 bg-transparent border-none focus:outline-none focus:ring-0 w-full"
-          />
-        </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="md:col-span-2 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              onBlur={handleSave}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              rows={4}
-              placeholder="Add a description..."
-            />
-          </div>
-
-          {/* Comments */}
-          <div>
-            <CommentSection taskId={card._id} />
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-            <select
-              value={priority}
-              onChange={(e) => { setPriority(e.target.value); setTimeout(handleSave, 0); }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => { setDueDate(e.target.value); setTimeout(handleSave, 0); }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Move to List</label>
-            {movingCard ? (
-              <div className="space-y-2">
-                <select
-                  value={selectedListId}
-                  onChange={(e) => setSelectedListId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select a list</option>
-                  {lists.map(list => (
-                    <option key={list._id} value={list._id}>{list.name}</option>
-                  ))}
-                </select>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleMove}
-                    disabled={!selectedListId}
-                    className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Move
-                  </button>
-                  <button
-                    onClick={() => setMovingCard(false)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setMovingCard(true)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
-              >
-                Move card
-              </button>
-            )}
-          </div>
-
-          <button
-            onClick={() => onDelete(card._id)}
-            className="w-full px-3 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
-          >
-            Delete Card
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

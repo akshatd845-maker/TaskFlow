@@ -17,6 +17,7 @@ import Board from './models/Board.js';
 import { isBoardMember } from './utils/boardAccess.js';
 import { getTokenFromSocketHandshake } from './utils/authCookie.js';
 import logger from './config/logger.js';
+import { socketLimiter } from './config/rateLimiter.js';
 
 let io;
 
@@ -46,11 +47,29 @@ const isValidObjectId = (id) => {
 };
 
 export const initSocket = (httpServer) => {
-  const corsOrigin = process.env.CLIENT_URL || '*';
+  // Strict production CORS for Socket.IO
+  const isProduction = process.env.NODE_ENV === 'production';
+  const clientUrl = process.env.CLIENT_URL;
+
+  // In production, require CLIENT_URL
+  if (isProduction && !clientUrl) {
+    throw new Error('CLIENT_URL is required in production for Socket.IO CORS');
+  }
+
+  // Development allowed origins
+  const allowedOrigins = isProduction
+    ? [clientUrl]
+    : [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:3000',
+        clientUrl // Also allow explicit client URL in development
+      ].filter(Boolean);
 
   io = new Server(httpServer, {
     cors: {
-      origin: corsOrigin,
+      origin: allowedOrigins,
       methods: ['GET', 'POST'],
       credentials: true
     },
@@ -60,6 +79,9 @@ export const initSocket = (httpServer) => {
     // Prevent connection floods
     maxHttpBufferSize: 1e6 // 1MB
   });
+
+  // Wire connection rate limiting
+  socketLimiter(io);
 
   // Authentication middleware
   io.use(async (socket, next) => {

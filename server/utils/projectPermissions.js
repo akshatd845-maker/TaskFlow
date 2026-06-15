@@ -18,11 +18,15 @@ export const getEffectiveRoleForUser = (project, userId) => {
   if (!project || !userId) return null;
   const uid = String(userId);
 
-  if (project.owner && String(project.owner) === uid) {
+  const ownerId = project.owner?._id ? String(project.owner._id) : String(project.owner);
+  if (ownerId === uid) {
     return EFFECTIVE_ROLES.OWNER;
   }
 
-  const member = (project.members || []).find((m) => String(m.user) === uid);
+  const member = (project.members || []).find((m) => {
+    const memberId = m.user?._id ? String(m.user._id) : String(m.user);
+    return memberId === uid;
+  });
   if (!member) return null;
 
   const r = normalizeRole(member.role);
@@ -37,7 +41,9 @@ export const getPermissionSet = (effectiveRole) => {
         removeMembers: true,
         changeRoles: true,
         editProject: true,
-        deleteProject: true
+        deleteProject: true,
+        viewProject: true,
+        createCard: true
       };
     case EFFECTIVE_ROLES.ADMIN:
       return {
@@ -45,7 +51,9 @@ export const getPermissionSet = (effectiveRole) => {
         removeMembers: true,
         changeRoles: true,
         editProject: true,
-        deleteProject: false
+        deleteProject: false,
+        viewProject: true,
+        createCard: true
       };
     case EFFECTIVE_ROLES.MEMBER:
       return {
@@ -53,7 +61,9 @@ export const getPermissionSet = (effectiveRole) => {
         removeMembers: false,
         changeRoles: false,
         editProject: false,
-        deleteProject: false
+        deleteProject: false,
+        viewProject: true,
+        createCard: true
       };
     case 'viewer':
       return {
@@ -61,7 +71,9 @@ export const getPermissionSet = (effectiveRole) => {
         removeMembers: false,
         changeRoles: false,
         editProject: false,
-        deleteProject: false
+        deleteProject: false,
+        viewProject: true,
+        createCard: false
       };
     default:
       return {
@@ -69,7 +81,9 @@ export const getPermissionSet = (effectiveRole) => {
         removeMembers: false,
         changeRoles: false,
         editProject: false,
-        deleteProject: false
+        deleteProject: false,
+        viewProject: false,
+        createCard: false
       };
   }
 };

@@ -8,7 +8,30 @@ export default {
   theme: {
     extend: {
       colors: {
+        surface: {
+          DEFAULT: '#13121b',
+          dim: '#13121b',
+          bright: '#393842',
+          lowest: '#0e0d16',
+          low: '#1b1b24',
+          container: '#1f1f28',
+          high: '#2a2933',
+          highest: '#35343e',
+        },
+        'on-surface': '#e4e1ee',
+        'on-surface-variant': '#c7c4d8',
+        'inverse-surface': '#e4e1ee',
+        'inverse-on-surface': '#302f39',
+        outline: {
+          DEFAULT: '#918fa1',
+          variant: '#464555',
+        },
+        'surface-tint': '#c3c0ff',
         primary: {
+          DEFAULT: '#c3c0ff',
+          container: '#4f46e5',
+          'on-container': '#dad7ff',
+          inverse: '#4d44e3',
           50: '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
@@ -19,11 +42,50 @@ export default {
           700: '#1d4ed8',
           800: '#1e40af',
           900: '#1e3a8a',
-        }
+        },
+        'on-primary': '#1d00a5',
+        secondary: {
+          DEFAULT: '#89ceff',
+          container: '#00a2e6',
+          'on-container': '#00344e',
+        },
+        'on-secondary': '#00344d',
+        tertiary: {
+          DEFAULT: '#ffb695',
+          container: '#a44100',
+          'on-container': '#ffd2be',
+        },
+        'on-tertiary': '#571f00',
+        error: {
+          DEFAULT: '#ffb4ab',
+          container: '#93000a',
+          'on-container': '#ffdad6',
+        },
+        'on-error': '#690005',
+        background: '#13121b',
+        'on-background': '#e4e1ee',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        geist: ['Geist', 'sans-serif'],
       },
+      borderRadius: {
+        sm: '0.25rem',
+        DEFAULT: '0.5rem',
+        md: '0.75rem',
+        lg: '1rem',
+        xl: '1.5rem',
+        full: '9999px',
+      },
+      spacing: {
+        base: '4px',
+        xs: '4px',
+        sm: '8px',
+        md: '16px',
+        lg: '24px',
+        xl: '40px',
+        '2xl': '64px',
+      }
     },
   },
   plugins: [],

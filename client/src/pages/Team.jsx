@@ -50,14 +50,22 @@ const Team = () => {
 
   const onRemove = async (userId) => {
     setError('');
-    await projectService.removeMember(projectId, userId);
-    await loadTeam();
+    try {
+      await projectService.removeMember(projectId, userId);
+      await loadTeam();
+    } catch (e) {
+      setError(e?.response?.data?.message || e.message || 'Failed to remove member');
+    }
   };
 
   const onChangeRole = async (userId, role) => {
     setError('');
-    await projectService.updateRole(projectId, userId, role);
-    await loadTeam();
+    try {
+      await projectService.updateRole(projectId, userId, role);
+      await loadTeam();
+    } catch (e) {
+      setError(e?.response?.data?.message || e.message || 'Failed to update role');
+    }
   };
 
   return (

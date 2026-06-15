@@ -36,7 +36,6 @@ export default {
   moduleFileExtensions: ['js', 'mjs'],
   // Setup files
   setupFilesAfterEnv: ['./jest.setup.js'],
-  // Mock external dependencies
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1'
   }

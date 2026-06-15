@@ -1,1 +1,33 @@
 node_modules
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist
+build
+.cache
+
+# Logs
+logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+# VS Code
+.vscode/
+
+# Build outputs
+dist/
+build/
+client/dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+server/.env
+client/.env
