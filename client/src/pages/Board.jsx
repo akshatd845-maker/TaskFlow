@@ -27,7 +27,15 @@ const Board = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [board, setBoard] = useState(null);
+  const [board, setBoardState] = useState(null);
+  const setBoard = useCallback((updater) => {
+    setBoardState((prev) => {
+      if (typeof updater === 'function') {
+        return updater(prev);
+      }
+      return updater;
+    });
+  }, []);
   const [loading, setLoading] = useState(true);
   const [showAddList, setShowAddList] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -103,20 +111,14 @@ const Board = () => {
     setCreatingCard(true);
 
     try {
-      const response = await cardAPI.create({
+      await cardAPI.create({
         ...newCard,
         listId: listIdForCard
       });
 
-      setBoard(prev => {
-        const updatedLists = prev.lists.map(list => {
-          if (list._id === listIdForCard) {
-            return { ...list, cards: [...(list.cards || []), response.data] };
-          }
-          return list;
-        });
-        return { ...prev, lists: updatedLists };
-      });
+      // Do NOT update state here — the socket 'cardCreated' event (in KanbanBoard.jsx)
+      // is the single source of truth and already has a dedup guard. Adding the card
+      // here as well was causing the card to appear twice until page refresh.
       setShowCardModal(false);
       setNewCard({ title: '', description: '', priority: 'medium' });
     } catch (err) {

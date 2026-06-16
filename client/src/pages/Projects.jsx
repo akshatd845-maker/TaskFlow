@@ -137,6 +137,15 @@ const Projects = () => {
           <h1 className="text-2xl font-bold text-[#e4e1ee]" style={{ fontWeight: 700 }}>Projects</h1>
           <p className="text-[#c7c4d8] mt-1">Manage your projects and team</p>
         </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors self-start sm:self-auto"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+          New Project
+        </button>
       </div>
 
       {/* Error Message */}

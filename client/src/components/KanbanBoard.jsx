@@ -19,9 +19,17 @@ const KanbanBoard = memo(({ board, setBoard, onCardClick, onAddCard, onDeleteLis
       setBoard((prev) => {
         if (!prev) return prev;
         const cardListId = listIdFromRef(card.list);
-        const lists = prev.lists.map((l) =>
-          l._id === cardListId ? { ...l, cards: [...(l.cards || []), card] } : l
-        );
+        const lists = prev.lists.map((l) => {
+          if (l._id === cardListId) {
+            // Check if card already exists to prevent duplicates
+            const existingCards = l.cards || [];
+            if (existingCards.some((c) => c._id === card._id)) {
+              return l;
+            }
+            return { ...l, cards: [...existingCards, card] };
+          }
+          return l;
+        });
         return { ...prev, lists };
       });
     };
@@ -52,21 +60,22 @@ const KanbanBoard = memo(({ board, setBoard, onCardClick, onAddCard, onDeleteLis
     const onCardMoved = ({ card, fromList, toList, position }) => {
       setBoard((prev) => {
         if (!prev) return prev;
-        const lists = prev.lists
-          .map((l) => {
-            if (l._id === fromList.toString()) {
-              return { ...l, cards: (l.cards || []).filter((c) => c._id !== card._id) };
-            }
-            return l;
-          })
-          .map((l) => {
-            if (l._id === toList.toString()) {
-              const newCards = Array.from(l.cards || []);
-              newCards.splice(position, 0, card);
-              return { ...l, cards: newCards };
-            }
-            return l;
-          });
+        // First pass: strip the card from every list (handles both the source
+        // list and the case where an optimistic update already placed it in
+        // the destination list, which would otherwise cause a duplicate).
+        const stripped = prev.lists.map((l) => ({
+          ...l,
+          cards: (l.cards || []).filter((c) => c._id !== card._id),
+        }));
+        // Second pass: insert the card at the correct position in the target list.
+        const lists = stripped.map((l) => {
+          if (l._id === toList.toString()) {
+            const newCards = Array.from(l.cards);
+            newCards.splice(position, 0, card);
+            return { ...l, cards: newCards };
+          }
+          return l;
+        });
         return { ...prev, lists };
       });
     };
